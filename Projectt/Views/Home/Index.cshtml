@@ -1,0 +1,148 @@
+﻿@{
+    ViewBag.Title = "Home Page";
+}
+
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@10/dist/sweetalert2.min.css">
+<style>
+    body {
+        background-color: #f8f9fa;
+    }
+
+    .container {
+        margin-top: 50px;
+    }
+
+    .card {
+        border: 1px solid #ced4da;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .card-body {
+        padding: 30px;
+    }
+
+    .btn-upload {
+        border: 2px solid gray;
+        color: gray;
+        background-color: white;
+        padding: 8px 20px;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: bold;
+    }
+
+    .btn-success {
+        background-color: #28a745;
+        border-color: #28a745;
+    }
+
+   .btn-success:hover {
+            background-color: #218838;
+            border-color: #218838;
+        }
+</style>
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-9">
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="card-title text-center mb-4">Excel Upload</h2>
+                    <div class="row">
+                        <label class="col-md-12"><h6>Upload an Excel file</h6></label>
+                        <div class="col-md-12">
+                        <input type="file" id="fuExcel" />
+                    </div>
+                        <div class="col-md-12 mt-3">
+                            <button id="btnupload" class="btn btn-success btn-block">
+                                Upload
+                            </button>
+                        </div>
+                    </div>
+                    <div id="successMessage" class="mt-3" style="display:none;">
+                        <p id="successText" class="text-success"></p>
+                        <a id="downloadLink" class="btn btn-primary" style="display:none;" download>Download Excel</a>
+                    </div>
+
+                    <div id="errorMessage" class="mt-3" style="display:none;">
+                        <p id="errorText" class="text-danger"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+<script>
+    $(document).ready(function () {
+        $("#btnupload").click(function () {
+            var formData = new FormData();
+            var fuuploadfile = document.getElementById("fuExcel");
+            var myfile = fuuploadfile.files[0];
+            formData.append("myExcelData", myfile);
+
+            Swal.fire({
+                title: 'Uploading...',
+                icon: 'info',
+                showConfirmButton: false,
+                allowOutsideClick: false
+            });
+
+            $.ajax({
+                type: 'POST',
+                url: '@Url.Action("UploadFile", "Home")',
+                contentType: false,
+                processData: false,
+                data: formData,
+                success: function (data) {
+                    Swal.close();
+
+                    Swal.fire({
+                        title: data.success ? 'Success' : 'Error',
+                        text: data.message,
+                        icon: data.success ? 'success' : 'error',
+                        confirmButtonText: 'OK'
+                    });
+
+                    if (data.success) {
+                        $("#successText").text(data.message);
+                        $("#successMessage").show();
+
+                        $("#downloadLink").attr("href", data.downloadLink);
+                        $("#downloadLink").show();
+
+                        $("#errorMessage").hide();
+                    } else {
+                        $("#errorText").text(data.message);
+                        $("#errorMessage").addClass("text-danger");
+                        $("#errorMessage").show();
+
+                        $("#successMessage").hide();
+                        $("#downloadLink").hide();
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    Swal.close();
+
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'An error occurred during the upload. Please try again.',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+
+                    $("#successMessage").hide();
+                    $("#downloadLink").hide();
+
+                    $("#errorText").text('An error occurred during the upload. Please try again.');
+                    $("#errorMessage").addClass("text-danger");
+                    $("#errorMessage").show();
+                }
+            });
+        });
+    });
+</script>
